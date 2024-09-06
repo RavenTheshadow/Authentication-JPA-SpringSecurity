@@ -1,8 +1,10 @@
 package org.example.authentication.service;
 
+import org.example.authentication.exception.UserAlreadyExistedException;
 import org.example.authentication.model.Form.LoginRequest;
 import org.example.authentication.model.Form.RegisterRequest;
-import org.example.authentication.model.Entity.UsersEntity.UserEntity;
+import org.example.authentication.model.User.Details.CustomUserDetails;
+import org.example.authentication.model.User.Entity.UserEntity;
 import org.example.authentication.repository.UserRepository;
 import org.example.authentication.config.jwt.JwtGeneratorInterface;
 import org.hibernate.ObjectNotFoundException;
@@ -39,38 +41,45 @@ public class AuthenticationService {
     public ResponseEntity<?> loginRequest(LoginRequest loginRequest) throws BadCredentialsException {
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(), loginRequest.getPassword()
-                )
-        );
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BadCredentialsException("Invalid username or password");
+        }
 
-        UserEntity user = userRepository.findByUsername(loginRequest.getUsername());
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String user_id = userDetails.getUserId();
 
         Map<String, String> response = jwtGenerator.generateToken(loginRequest.getUsername());
-
-        String user_id = user.getId().toString();
 
         response.put("user_id", user_id);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    private void CheckingValidUserRegister(String username) throws UserAlreadyExistedException {
+        UserEntity user = userRepository.findByUsername(username);
+    }
+
     public ResponseEntity<?> register(RegisterRequest registerRequest) throws BadCredentialsException {
-        System.out.println("Register request: " + registerRequest);
-        String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
-        UserEntity user = new UserEntity(
-                registerRequest.getUsername(),
-                encodedPassword,
-                registerRequest.getPhoneNumber(),
-                registerRequest.getEmail(),
-                registerRequest.getFirstName(),
-                registerRequest.getLastName(),
-                "USER"
-        );
-        userRepository.save(user);
-        return ResponseEntity.ok("Register successful");
+        try {
+            System.out.println("Register request: " + registerRequest);
+            CheckingValidUserRegister(registerRequest.getUsername());
+            String encodedPassword = passwordEncoder.encode(registerRequest.getPassword());
+            UserEntity user = new UserEntity(
+                    registerRequest.getUsername(),
+                    encodedPassword,
+                    registerRequest.getPhoneNumber(),
+                    registerRequest.getEmail(),
+                    registerRequest.getFirstName(),
+                    registerRequest.getLastName(),
+                    "USER"
+            );
+            userRepository.save(user);
+            return new ResponseEntity<>("Register Successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("User existed", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public ResponseEntity<?> test() throws BadCredentialsException {
@@ -97,7 +106,7 @@ public class AuthenticationService {
         SecurityContextHolder.getContext().setAuthentication(null);
 
         try {
-            if (!jwtGenerator.validateToken(token)) {
+            if (jwtGenerator.validateToken(token)) {
                 return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
             }
             jwtGenerator.disableAccessToken(token);
@@ -106,5 +115,36 @@ public class AuthenticationService {
         }
 
         return new ResponseEntity<>("Logout successful", HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> refreshToken(String str_uuid, String token) {
+        try {
+            UserEntity user = userRepository.findById(UUID.fromString(str_uuid));
+            String username = user.getUsername();
+
+            if (!jwtGenerator.validateToken(token)) {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+
+            jwtGenerator.disableAccessToken(token);
+
+            Map<String, String> response = jwtGenerator.refreshToken(username);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (ChangeSetPersister.NotFoundException e) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    public ResponseEntity<?> validToken(String token) {
+        try {
+            if (jwtGenerator.validateToken(token)) {
+                return new ResponseEntity<>("Token is valid", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+        }
     }
 }

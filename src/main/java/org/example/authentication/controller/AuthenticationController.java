@@ -1,6 +1,7 @@
 package org.example.authentication.controller;
 
 
+import org.example.authentication.exception.HttpResponseCode;
 import org.example.authentication.model.Form.LoginRequest;
 import org.example.authentication.model.Form.RegisterRequest;
 import org.example.authentication.service.AuthenticationService;
@@ -29,14 +30,14 @@ public class AuthenticationController {
             System.out.println(loginRequest);
             return authenticationService.loginRequest(loginRequest);
         } catch (BadCredentialsException e) {
-            return new ResponseEntity<>("Login Failed", HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>("Login failed", HttpStatus.UNAUTHORIZED);
         }
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody() RegisterRequest registerRequest) {
         try {
-            return  authenticationService.register(registerRequest);
+            return authenticationService.register(registerRequest);
         } catch (BadCredentialsException e) {
             return new ResponseEntity<>("Register Failed", HttpStatus.UNAUTHORIZED);
         }
@@ -51,6 +52,28 @@ public class AuthenticationController {
         catch (ObjectNotFoundException | ChangeSetPersister.NotFoundException e) {
             return new ResponseEntity<>("Logout Failed", HttpStatus.NOT_FOUND);
         }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String authHeader, @RequestBody() String str_uuid) {
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        } else {
+            return new ResponseEntity<>("Invalid Authorization header", HttpStatus.BAD_REQUEST);
+        }
+        return authenticationService.refreshToken(str_uuid, token);
+    }
+
+    @PostMapping("/validate-token")
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        } else {
+            return new ResponseEntity<>("Invalid Authorization header", HttpStatus.BAD_REQUEST);
+        }
+        return authenticationService.validToken(token);
     }
 
 //    @PostMapping("/delete/account")

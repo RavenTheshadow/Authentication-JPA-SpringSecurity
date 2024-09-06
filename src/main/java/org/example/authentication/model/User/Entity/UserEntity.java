@@ -1,4 +1,4 @@
-package org.example.authentication.model.Entity.UsersEntity;
+package org.example.authentication.model.User.Entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

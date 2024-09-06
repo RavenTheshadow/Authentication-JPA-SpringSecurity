@@ -1,6 +1,6 @@
 package org.example.authentication.repository;
 
-import org.example.authentication.model.Entity.UsersEntity.UserEntity;
+import org.example.authentication.model.User.Entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

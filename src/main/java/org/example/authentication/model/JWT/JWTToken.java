@@ -1,4 +1,4 @@
-package org.example.authentication.model.Entity.UsersEntity;
+package org.example.authentication.model.JWT;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

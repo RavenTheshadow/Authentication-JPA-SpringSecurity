@@ -1,6 +1,5 @@
 package org.example.authentication.config;
 
-
 import org.example.authentication.service.UserDetailsServiceImply;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,24 +21,22 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private final UserDetailsServiceImply userDetailsService;
 
-    public SecurityConfig(UserDetailsServiceImply userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
+    public final static String AUTHORIZATION_HEADER = "Authorization";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors()
-                .and()
-                .csrf().disable()
-                .authorizeRequests(
-                (authorize) -> authorize
-                        .requestMatchers("/api/v1/login", "/api/v1/test", "/api/v1/register").permitAll()
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/v1/login", "/api/v1/test",
+                                "/api/v1/register", "/api/v1/refresh-token",
+                                "/api/v1/validate-token").permitAll()
                         .anyRequest().authenticated())
-                .formLogin().disable()
-                .httpBasic().disable();
+                .formLogin(form -> form.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
         return http.build();
     }
 
@@ -63,15 +60,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsServiceImply userDetailsService() {
-        return userDetailsService;
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder, UserDetailsServiceImply userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
 

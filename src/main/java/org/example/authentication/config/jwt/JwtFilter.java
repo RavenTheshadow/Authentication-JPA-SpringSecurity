@@ -1,36 +1,60 @@
 //package org.example.authentication.config.jwt;
 //
-//import io.jsonwebtoken.Claims;
-//import io.jsonwebtoken.Jwts;
+//
+//import io.jsonwebtoken.ExpiredJwtException;
 //import jakarta.servlet.FilterChain;
 //import jakarta.servlet.ServletException;
 //import jakarta.servlet.ServletRequest;
 //import jakarta.servlet.ServletResponse;
 //import jakarta.servlet.http.HttpServletRequest;
 //import jakarta.servlet.http.HttpServletResponse;
+//import org.example.authentication.service.JwtTokenProvider;
+//import org.springframework.security.core.Authentication;
+//import org.springframework.security.core.context.SecurityContextHolder;
+//import org.springframework.util.StringUtils;
 //import org.springframework.web.filter.GenericFilterBean;
 //
 //import java.io.IOException;
 //
-//public class JwtFilter extends GenericFilterBean {
-//    @Override
-//    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-//        final HttpServletRequest request = (HttpServletRequest) servletRequest;
-//        final HttpServletResponse response = (HttpServletResponse) servletResponse;
-//        final String authHeader = request.getHeader("Authorization");
 //
-//        if ("OPTIONS".equals(request.getMethod())) {
-//            response.setStatus(HttpServletResponse.SC_OK);
-//            filterChain.doFilter(request, response);
-//        } else {
-//            if (authHeader == null || !authHeader.startsWith("Bearer")) {
-//                throw new ServletException("An error occurred while attempting to authenticate the request.");
+//public class JwtFilter extends GenericFilterBean {
+//
+////    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(JwtFilter.class);
+//
+//    private final JwtTokenProvider jwtTokenProvider;
+//    public JwtFilter(JwtTokenProvider jwtTokenProvider) {
+//        this.jwtTokenProvider = jwtTokenProvider;
+//    }
+//
+//    @Override
+//    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+//            throws IOException, ServletException {
+//        try {
+//            HttpServletRequest request = (HttpServletRequest) servletRequest;
+//            String jwt = this.resolveToken(request);
+//            if (StringUtils.hasText(jwt)) {
+//                Authentication authentication = this.jwtTokenProvider.getAuthentication(jwt);
+//                SecurityContextHolder.getContext().setAuthentication(authentication);
 //            }
-//            final String token = authHeader.substring(7);
-//            Claims claims = Jwts.parser().setSigningKey("secret").parseClaimsJws(token).getBody();
-//            request.setAttribute("claims", claims);
-//            request.setAttribute("blog", servletRequest.getParameter("id"));
-//            filterChain.doFilter(request, response);
+//            filterChain.doFilter(servletRequest, servletResponse);
+//            // Reset the authentication after request done
+//            this.resetAuthenticationAfterRequest();
+//        } catch (ExpiredJwtException eje) {
+//            ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED,
+//                    "JWT token has expired");
+//        }
+//    }
+//
+//    private void resetAuthenticationAfterRequest() {
+//        SecurityContextHolder.getContext().setAuthentication(null);
+//    }
+//
+//    private String resolveToken(HttpServletRequest request) {
+//        String bearerToken = request.getHeader("Authorization");
+//        if (bearerToken != null && bearerToken.startsWith("bearer ")) {
+//            return bearerToken.substring(7);
+//        } else {
+//            return null;
 //        }
 //    }
 //}
