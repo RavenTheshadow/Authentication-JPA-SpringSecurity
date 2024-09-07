@@ -1,14 +1,11 @@
 package org.example.authentication.config.jwt;
 
-import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.security.core.Authentication;
 
 import java.util.Map;
 
 public interface JwtGeneratorInterface {
-    Map<String, String> generateToken(String username);
-    Map<String, String> refreshToken(String username);
-
-    boolean validateToken(String refresh_token) throws ChangeSetPersister.NotFoundException;
-    void disableAccessToken(String token) throws ChangeSetPersister.NotFoundException;
-
+    Map<String, String> generateToken(Authentication authentication);
+    Authentication getAuthentication(String token);
+    boolean validateToken(String authToken);
 }

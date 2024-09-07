@@ -1,6 +1,9 @@
 package org.example.authentication.config;
 
+import org.example.authentication.config.jwt.JwtFilter;
+import org.example.authentication.service.JwtTokenProvider;
 import org.example.authentication.service.UserDetailsServiceImply;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -21,17 +25,21 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     public final static String AUTHORIZATION_HEADER = "Authorization";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        JwtFilter customFilter = new JwtFilter(jwtTokenProvider);
+
+        http.addFilterBefore(customFilter, UsernamePasswordAuthenticationFilter.class);
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/v1/login", "/api/v1/test",
-                                "/api/v1/register", "/api/v1/refresh-token",
-                                "/api/v1/validate-token").permitAll()
+                                "/api/v1/register").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())

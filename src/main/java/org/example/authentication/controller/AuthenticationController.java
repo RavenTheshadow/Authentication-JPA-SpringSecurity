@@ -43,38 +43,38 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token, @RequestBody() String str_uuid) {
-        try {
-            UUID uuid = UUID.fromString(str_uuid);
-            return authenticationService.logout(uuid, token);
-        }
-        catch (ObjectNotFoundException | ChangeSetPersister.NotFoundException e) {
-            return new ResponseEntity<>("Logout Failed", HttpStatus.NOT_FOUND);
-        }
-    }
+//    @PostMapping("/logout")
+//    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token, @RequestBody() String str_uuid) {
+//        try {
+//            UUID uuid = UUID.fromString(str_uuid);
+//            return authenticationService.logout(uuid, token);
+//        }
+//        catch (ObjectNotFoundException | ChangeSetPersister.NotFoundException e) {
+//            return new ResponseEntity<>("Logout Failed", HttpStatus.NOT_FOUND);
+//        }
+//    }
 
-    @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String authHeader, @RequestBody() String str_uuid) {
-        String token = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-        } else {
-            return new ResponseEntity<>("Invalid Authorization header", HttpStatus.BAD_REQUEST);
-        }
-        return authenticationService.refreshToken(str_uuid, token);
-    }
-
-    @PostMapping("/validate-token")
-    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
-        String token = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-        } else {
-            return new ResponseEntity<>("Invalid Authorization header", HttpStatus.BAD_REQUEST);
-        }
-        return authenticationService.validToken(token);
-    }
+//    @PostMapping("/refresh-token")
+//    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String authHeader, @RequestBody() String str_uuid) {
+//        String token = null;
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//            token = authHeader.substring(7);
+//        } else {
+//            return new ResponseEntity<>("Invalid Authorization header", HttpStatus.BAD_REQUEST);
+//        }
+//        return authenticationService.refreshToken(str_uuid, token);
+//    }
+//
+//    @PostMapping("/validate-token")
+//    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
+//        String token = null;
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//            token = authHeader.substring(7);
+//        } else {
+//            return new ResponseEntity<>("Invalid Authorization header", HttpStatus.BAD_REQUEST);
+//        }
+//        return authenticationService.validToken(token);
+//    }
 
 //    @PostMapping("/delete/account")
 //    public ResponseEntity<?> deleteAccount(@RequestBody() String username) {
