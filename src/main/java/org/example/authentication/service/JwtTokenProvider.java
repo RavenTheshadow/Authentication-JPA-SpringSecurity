@@ -66,8 +66,8 @@ public class JwtTokenProvider implements JwtGeneratorInterface {
     public Map<String, String> generateToken(Authentication authentication) {
         String jwt_token = createToken(authentication);
         Map<String, String> response = new HashMap<>();
-        response.put("token:", jwt_token);
-        response.put("message:", "Create jwt token successfully");
+        response.put("token", jwt_token);
+        response.put("message", "Create jwt token successfully");
         return response;
     }
 
@@ -85,5 +85,10 @@ public class JwtTokenProvider implements JwtGeneratorInterface {
             LOGGER.error("JWT token validation error: {}", e.getMessage());
             return false;
         }
+    }
+
+    @Override
+    public void disableAccessToken(String token) {
+
     }
 }

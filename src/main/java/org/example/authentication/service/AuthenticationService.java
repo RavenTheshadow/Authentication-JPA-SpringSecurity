@@ -1,5 +1,6 @@
 package org.example.authentication.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.example.authentication.exception.UserAlreadyExistedException;
 import org.example.authentication.model.Form.LoginRequest;
 import org.example.authentication.model.Form.RegisterRequest;
@@ -7,22 +8,17 @@ import org.example.authentication.model.User.Details.CustomUserDetails;
 import org.example.authentication.model.User.Entity.UserEntity;
 import org.example.authentication.repository.UserRepository;
 import org.example.authentication.config.jwt.JwtGeneratorInterface;
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class AuthenticationService {
@@ -103,51 +99,9 @@ public class AuthenticationService {
         }
     }
 
-//    public ResponseEntity<?> logout(UUID uuid, String token) throws ObjectNotFoundException, ChangeSetPersister.NotFoundException {
-//        UserEntity user = userRepository.findById(uuid);
-//
-//        SecurityContextHolder.getContext().setAuthentication(null);
-//
-//        try {
-//            if (jwtGenerator.validateToken(token)) {
-//                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
-//            }
-//            jwtGenerator.disableAccessToken(token);
-//        } catch (ChangeSetPersister.NotFoundException e) {
-//            throw new ChangeSetPersister.NotFoundException();
-//        }
-//
-//        return new ResponseEntity<>("Logout successful", HttpStatus.OK);
-//    }
-//
-//    public ResponseEntity<?> refreshToken(String str_uuid, String token) {
-//        try {
-//            UserEntity user = userRepository.findById(UUID.fromString(str_uuid));
-//            String username = user.getUsername();
-//
-//            if (!jwtGenerator.validateToken(token)) {
-//                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
-//            }
-//
-//            jwtGenerator.disableAccessToken(token);
-//
-//            Map<String, String> response = jwtGenerator.refreshToken(username);
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//
-//        } catch (ChangeSetPersister.NotFoundException e) {
-//            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
-//        }
-//    }
-//
-//    public ResponseEntity<?> validToken(String token) {
-//        try {
-//            if (jwtGenerator.validateToken(token)) {
-//                return new ResponseEntity<>("Token is valid", HttpStatus.OK);
-//            } else {
-//                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
-//            }
-//        } catch (Exception e) {
-//            return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
-//        }
-//    }
+    public ResponseEntity<?> logout(HttpServletRequest request)  {
+        String token = request.getHeader("Authorization").substring(7);
+        jwtGenerator.disableAccessToken(token);
+        return new ResponseEntity<>("Logout successful", HttpStatus.OK);
+    }
 }
